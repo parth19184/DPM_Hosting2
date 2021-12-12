@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel='stylesheet' href='/static/bootstrap-4.0.0-dist/css/bootstrap-grid.min.css'>
+        <link rel='stylesheet' href='/static/bootstrap-4.0.0-dist/css/bootstrap.min.css'>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css')}}">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <title>
+            Details
+        </title>
+        <style>
+            #myImg1{
+                /* background-image:url({{url_for('static', filename='/images/2.gif')}}); */
+                background-color:#231832;
+                height: 100vh;
+                background-attachment:fixed;
+                background-position:center;
+                background-size:cover;
+            }
+            #myImg2{
+                background-image:url({{url_for('static', filename='/images/1.gif')}});
+                height: 100vh;
+                background-attachment:fixed;
+                background-position:center;
+                background-size:cover;
+            }
+            nav a{
+                font-size: 25px;;
+            }
+        </style>
+    </head>
+
+    <body>
+        <nav class="navbar navbar-dark bg-dark" style="top:0px; position: sticky; display: flex; z-index: 1; height:60px; justify-content: space-around; align-items:center;">
+            <a href="{{ url_for('index')}}">Home</a>
+            <a href="#navSearch">Search</a>
+            <a href="{{ url_for('watchList') }}">Watch List</a>
+            <a href="{{ url_for('Compare') }}">Compare</a>
+        </nav>
+        <div id="myImg1">
+            <div class="container-fluid" style="padding-top: 50px;">
+                <div class="row">
+                    <div class="col-12 col-sm-12 align:center ">
+                        <h1 style="color: rgb(0, 255, 42);">{{Heading|safe}}</h1>
+                        <div class="con" style="background-color:none; ">
+                            <div id = "form-sidebar" class = "col-12 col-sm-12  " style = "text-align:center"> 
+                                <!-- <div class = "bg-light p-1"> -->
+                                <canvas id="lineChart" width="1000" height="250"></canvas>
+                                <script>
+                                    const data={
+                                            labels:{{ labels | safe }},
+                                            datasets: [
+                                            {
+                                                    label: "Positive",
+                                                    data: {{ PosPlot | safe }},
+                                                    backgroundColor: "green",
+                                                    borderColor: "rgb(75,192,192)",
+                                                },
+                                                {
+                                                    label: "Neutral",
+                                                    data: {{ NeuPlot | safe }},
+                                                    backgroundColor: "gold",
+                                                    borderColor: "rgb(75,192,192)",
+                                                },
+                                                {
+                                                    label: "Negative",
+                                                    data: {{ NegPlot | safe }},
+                                                    backgroundColor: "red",
+                                                    borderColor: "rgb(75,192,192)",
+                                                }
+                                            ]
+                                        };
+                                    
+                                    const config = {
+                                        type:"bar",
+                                        backgroundColor:"black",
+                                        data,
+                                        options:{
+                                            parsing:{
+                                                xAxisKey:'nums',
+                                                yAxisKey:'prod.val'
+                                            },
+                                            responsive:true
+                                        },
+                                    };
+
+                                    var ctx =document.getElementById("lineChart");
+                                    var lineChart = new Chart(
+                                        ctx,
+                                        config
+                                    );
+                                    function clickHandler(click){
+                                        const points = lineChart.getElementsAtEventForMode(click, 'nearest',
+                                            {intersect: true}, true)
+                                        if(points.length){
+                                            const firstPoint = points[0];
+                                            const value = lineChart.data.datasets[firstPoint.datasetIndex].
+                                            data[firstPoint.index];
+                                            fmtJson = JSON.stringify(value.prod.link);
+                                            Tolist = JSON.parse(fmtJson)
+                                            let str ="<p>";
+                                            for(let i=0; i<Tolist.length; i++)
+                                            {
+                                                str +=Tolist[i] +"</p><p>"
+                                            }
+                                            str+="</p>"
+                                            document.getElementById("feed").innerHTML=(str);
+                                        }
+                                    }
+                                    ctx.onclick = clickHandler;
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Div is about the feedback -->
+                    <div class="col-12 col-sm-12">
+                        <div style="height: 150px; background-color: white; overflow-y: scroll; overflow-x: hidden;">
+                            <p id="feed"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Div is about search box and second layout -->
+        <div id="myImg2">
+            <!-- Made for Search Box -->
+            <div style="height: 45vh; width:50vh; ">
+                <!-- an empty box for make it at center -->
+            </div>
+            <div id="navSearch" class="col-sm-12">
+                <div class="boxContainer">
+                    <table class ="elementsContatiner">
+                        <tr>
+                            <td>
+                            <!-- <input type="text" placeholder="Search" class="search"> -->
+                            </td>
+                            <form method = "post" action = "/Detail"> 
+                                <div id="myCon" class="row">
+                                    <div class="col-9">
+                                        <select id="DDst" name="DDst" class="formselect" aria-label="Default select example" onmousedown="if(this.options.length>8){this.size=8;}" onClick='this.size=0;' onmouseleave="this.size=0;">
+                                            <option value="not" selected disabled style="text-align: center;">Select the stock</option>
+                                            {% for st in stock_symbols %}
+                                                <option value={{st}}>{{st}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-3">
+                                        <button id="fetch" class="btn btn-sm btn-sucess" type="submit">Fetch</button>
+                                    </div>
+                                </div>   
+                            </form>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+                <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"
+                crossorigin="anonymous"></script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.0.min.js"
+                crossorigin="anonymous"></script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.0.min.js"
+                crossorigin="anonymous"></script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.0.min.js"
+                crossorigin="anonymous"></script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.0.min.js"
+                crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" 
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" 
+            crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" 
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" 
+            crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" 
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" 
+            crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" 
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
+            crossorigin="anonymous"></script>
+        <script src="bootstrap-4.0.0-dist/js/bootstrap.min.js"></script>
+    </body>
+</html>

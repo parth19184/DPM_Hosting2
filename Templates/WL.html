@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">        
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet"/>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css')}}">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <title>
+            Watch List
+        </title>
+
+        <style>
+            #myImg{
+            background-image:url({{url_for('static', filename='/images/1.gif')}});
+            height: 100vh;
+            background-attachment:fixed;
+            background-position:center;
+            background-size:cover;
+            }
+            nav a{
+                font-size: 25px;;
+            }
+            .myDIV {
+            width: 100%;
+            text-align: center;
+            background-color:hsl(36, 79%, 38%);
+            border-radius:5px;
+            display: none;
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <nav class="navbar navbar-dark bg-dark" style="top:0px; position: sticky; display: flex; z-index: 1; height:60px; justify-content: space-around; align-items:center;">
+            <a href="{{url_for('index')}}">Home</a>
+            <a href="#navSearch">Search</a>
+            <a href="">Watch List</a>
+            <a href="{{ url_for('Compare') }}">Compare</a>
+        </nav>
+
+        <div style="background-color: #231832; position:relative; margin-top: 0px; padding-bottom: 5px; min-height:80vh;">
+            <h2 style="padding: top 20px;" class="text-white">{{ Stock|safe }}</h2>
+            <div class="container-fluid" style="padding: 0px 25px 0px 25px;">
+                <div class="row">
+                    <div class="container-fluid col-sm-8" style="background-color: bisque; 
+                        border-bottom-left-radius: 10px; border-top-left-radius: 10px;">
+                        
+                        <canvas id="lineChart" width="300" height="150"></canvas>
+                        <script>
+                            const data={
+                                    labels:{{ labels | safe }},
+                                    datasets: [
+                                    {
+                                            label: "Positive",
+                                            data: {{ PosPlot | safe }},
+                                            backgroundColor: "green",
+                                            borderColor: "rgb(75,192,192)",
+                                            // lineTension:0.1
+                                        },
+                                        {
+                                            label: "Neutral",
+                                            data: {{ NeuPlot | safe }},
+                                            backgroundColor: "gold",
+                                            borderColor: "rgb(75,192,192)",
+                                        },
+                                        {
+                                            label: "Negative",
+                                            data: {{ NegPlot | safe }},
+                                            backgroundColor: "red",
+                                            borderColor: "rgb(75,192,192)",
+                                        }
+                                    ]
+                                };
+                            
+                            const config = {
+                                type:"bar",
+                                data,
+                                options:{
+                                    parsing:{
+                                        xAxisKey:'nums',
+                                        yAxisKey:'prod.val'
+                                    },
+                                    responsive:true
+                                }
+                            };
+
+                            var ctx =document.getElementById("lineChart");
+                            var lineChart = new Chart(
+                                ctx,
+                                config
+                            );
+                            function clickHandler(click){
+                                const points = lineChart.getElementsAtEventForMode(click, 'nearest',
+                                    {intersect: true}, true)
+                                if(points.length){
+                                    const firstPoint = points[0];
+                                    //console.log(firstPoint)
+                                    const value = lineChart.data.datasets[firstPoint.datasetIndex].
+                                    data[firstPoint.index];
+                                    document.getElementById("feed").innerHTML=(value.prod.link);
+                                }
+                            }
+                            ctx.onclick = clickHandler;
+                        </script>
+                    </div>
+                    
+                    <div class="container-fluid col-sm-4" style="background-color: white; 
+                        border-bottom-right-radius: 10px; border-top-right-radius: 10px; overflow: auto; height: 400px;">
+                        <h2>Responses:</h2>
+                        <p id="feed">Click on the Bar Graph to read responses.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Buttons -->
+        <footer class="text-center text-white" style="background-color: #563d7c; position:relative; bottom:0px; width:100%">
+            <div class="container-fluid">
+                <div class="row" style="padding:10px 5px 7px;">
+                    <div class="col-6 col-sm pr-4">
+                        <div class="row">
+                            <select id="sleList1">
+                                <option value="not" selected disabled style="text-align: center;">Select the stock</option>
+                                {% for st in stock_symbols %}
+                                    <option value={{st}}>{{st}} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <form action = "/watchList/" method = "POST">
+                            <button id="13" class="myDIV" type = "submit" name="13Bt">1</button>
+                        </form>
+                        <div class="row justify-content-center align-items-center">
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-danger" id="11" onclick="remfunc1()">-</button>
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-success" id="12" onclick="addfunc1()">+</button>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm pr-4">
+                        <div class="row">
+                            <select id="sleList2">
+                                <option value="not" selected disabled style="text-align: center;">Select the stock</option>
+                                {% for st in stock_symbols %}
+                                    <option value={{st}}>{{st}} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <form action = "/watchList/" method = "POST">
+                            <button id="23" class="myDIV" type = "submit" name="23Bt"></button>
+                        </form>
+                        <div class="row">
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-danger" id="21" onclick="remfunc2()">-</button>
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-success" id="22" onclick="addfunc2()">+</button>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm pr-4">
+                        <div class="row">
+                            <select id="sleList3">
+                                <option value="not" selected disabled style="text-align: center;">Select the stock</option>
+                                {% for st in stock_symbols %}
+                                    <option value={{st}}>{{st}} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <form action = "/watchList/" method = "POST">
+                            <button id="33" class="myDIV" type = "submit" name= "33Bt">1</button>
+                        </form>
+                        <div class="row">
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-danger" id="31" onclick="remfunc3()">-</button>
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-success" id="32" onclick="addfunc3()">+</button>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm pr-4">
+                        <div class="row">
+                            <select id="sleList4">
+                                <option value="not" selected disabled style="text-align: center;">Select the stock</option>
+                                {% for st in stock_symbols %}
+                                    <option value={{st}}>{{st}} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <form action = "/watchList/" method = "POST">
+                            <button id="43" class="myDIV" type = "submit" name="43Bt">1</button>
+                        </form>
+                        <div class="row">
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-danger" id="41" onclick="remfunc4()">-</button>
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-success" id="42" onclick="addfunc4()">+</button>
+                        </div>
+                    </div>
+                    <div class="col-sm pr-3">
+                        <div class="row">
+                            <select id="sleList5">
+                                <option value="not" selected disabled style="text-align: center;">Select the stock</option>
+                                {% for st in stock_symbols %}
+                                    <option value={{st}}>{{st}} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <form action = "/watchList/" method = "POST">
+                            <button id="53" class="myDIV" type = "submit" name="53Bt"></button>
+                        </form>
+                        <div class="row">
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-danger" id="51" onclick="remfunc5()">-</button>
+                            <button  class="col-6 btn btn-outline-light btn-rounded btn-sm btn-success" id="52" onclick="addfunc5()">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <div id="myImg">
+            <!-- Made for Search Box -->
+            <div style="height: 45vh; width:50vh; ">
+                
+            </div>
+            <div id="navSearch" class="col-sm-12">
+                <div class="boxContainer">
+                    <table class ="elementsContatiner">
+                        <tr>
+                            <td>
+                            <!-- <input type="text" placeholder="Search" class="search"> -->
+                            </td>
+                            <form method = "post" action = "/Detail"> 
+                                <div id="myCon" class="row">
+                                    <div class="col-9">
+                                        <select id="DDst" name="DDst" class="formselect" aria-label="Default select example" onmousedown="if(this.options.length>8){this.size=8;}" onClick='this.size=0;' onmouseleave="this.size=0;">
+                                            <option value="not" selected disabled style="text-align: center;">Select the stock</option>
+                                            {% for st in stock_symbols %}
+                                                <option value={{st}}>{{st}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-3">
+                                        <button id="fetch" class="btn btn-sm btn-sucess" type="submit">Fetch</button>
+                                    </div>
+                                </div>   
+                            </form>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" 
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" 
+            crossorigin="anonymous">
+        </script>
+        <script src="bootstrap-4.0.0-dist/js/bootstrap.min.js"></script>
+        <script src="bootstrap-4.0.0-dist/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+        <!-- This script is for cookies -->
+        <script>
+            function setCookie(name, value, daysToLive) {
+              // Encode value in order to escape semicolons, commas, and whitespace
+              var cookie = name + "=" + encodeURIComponent(value);
+          
+              if(typeof daysToLive === "number") {
+                  /* Sets the max-age attribute so that the cookie expires
+                  after the specified number of days */
+                  cookie += "; max-age=" + (daysToLive*24*60*60);
+                  document.cookie = cookie;
+              }
+            }
+            function addfunc1(){
+              var b1 = document.getElementById("13");
+              if(b1.style.display == "none"){
+                b1.style.display = "block";
+                var name= document.getElementById("sleList1").value;
+                b1.innerHTML=name;
+                document.getElementById("12").disabled = true;
+                document.getElementById("11").disabled = false;
+                document.getElementById("sleList1").hidden=true; // opt will appear
+                setCookie("13",name,1);
+              }
+              else{
+                b1.style.display="none";
+              }
+            }
+            function remfunc1(){
+              var b1 = document.getElementById("13");
+              b1.style.display = "none";
+              document.getElementById("12").disabled = false;
+              document.getElementById("11").disabled = true;
+              document.getElementById("sleList1").hidden=false; // opt will appear
+              document.cookie = "13=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            }
+      
+            function addfunc2(){
+              var b1 = document.getElementById("23");
+              if(b1.style.display == "none"){
+                b1.style.display = "block";
+                var name= document.getElementById("sleList2").value;
+                b1.innerHTML=name;
+                document.getElementById("22").disabled = true;
+                document.getElementById("21").disabled = false;
+                document.getElementById("sleList2").hidden=true; // opt will appear
+                setCookie("23",name,1);
+              }
+              else{
+                b1.style.display="none";
+              }
+            }
+            function remfunc2(){
+              var b1 = document.getElementById("23");
+              b1.style.display = "none";
+              document.getElementById("22").disabled = false;
+              document.getElementById("21").disabled = true;
+              document.getElementById("sleList2").hidden=false; // opt will appear
+              document.cookie = "23=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            }
+      
+            function addfunc3(){
+              var b1 = document.getElementById("33");
+              if(b1.style.display == "none"){
+                b1.style.display = "block";
+                var name= document.getElementById("sleList3").value;
+                b1.innerHTML=name;
+                document.getElementById("32").disabled = true;
+                document.getElementById("31").disabled = false;
+                document.getElementById("sleList3").hidden=true; // opt will appear
+                setCookie("33",name,1);
+              }
+              else{
+                b1.style.display="none";
+              }
+            }
+            function remfunc3(){
+              var b1 = document.getElementById("33");
+              b1.style.display = "none";
+              document.getElementById("32").disabled = false;
+              document.getElementById("31").disabled = true;
+              document.getElementById("sleList3").hidden=false; // opt will appear
+              document.cookie = "33=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            }
+      
+            function addfunc4(){
+              var b1 = document.getElementById("43");
+              if(b1.style.display == "none"){
+                b1.style.display = "block";
+                var name= document.getElementById("sleList4").value;
+                b1.innerHTML=name;
+                document.getElementById("42").disabled = true;
+                document.getElementById("41").disabled = false;
+                document.getElementById("sleList4").hidden=true; // opt will appear
+                setCookie("43",name,1);
+              }
+              else{
+                b1.style.display="none";
+              }
+            }
+            function remfunc4(){
+              var b1 = document.getElementById("43");
+              b1.style.display = "none";
+              document.getElementById("42").disabled = false;
+              document.getElementById("41").disabled = true;
+              document.getElementById("sleList4").hidden=false; // opt will appear
+              document.cookie = "43=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            }
+      
+            function addfunc5(){
+              var b1 = document.getElementById("53");
+              if(b1.style.display == "none"){
+                b1.style.display = "block";
+                var name= document.getElementById("sleList5").value;
+                b1.innerHTML=name;
+                document.getElementById("52").disabled = true;
+                document.getElementById("51").disabled = false;
+                document.getElementById("sleList5").hidden=true; // opt will appear
+                setCookie("53",name,1);
+              }
+              else{
+                b1.style.display="none";
+              }
+            }
+            function remfunc5(){
+              var b1 = document.getElementById("53");
+              b1.style.display = "none";
+              document.getElementById("52").disabled = false;
+              document.getElementById("51").disabled = true;
+              document.getElementById("sleList5").hidden=false; // opt will appear
+              document.cookie = "53=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            }
+      
+            function getCookie(name) {
+              // Split cookie string and get all individual name=value pairs in an array
+              var cookieArr = document.cookie.split(";");
+              
+              // Loop through the array elements
+              for(var i = 0; i < cookieArr.length; i++) {
+                var cookiePair = cookieArr[i].split("=");
+        
+                /* Removing whitespace at the beginning of the cookie name
+                and compare it with the given string */
+                if(name == cookiePair[0].trim()) {
+                    // Decode the cookie value and return
+                    return decodeURIComponent(cookiePair[1]);
+                }
+              }
+            }
+      
+            // A custom function to check cookies
+            function checkCookie() {
+              // Get cookie using our custom function
+              arr=["13","23","33","43","53"];
+              
+              for (let i = 0; i < 5; i++) {
+                var firstName = getCookie(arr[i]);
+                var addBt = (parseInt(arr[i]) - 1).toString();
+                
+                if(firstName != null) {
+                  var b1 = document.getElementById(arr[i]);
+                  var remBt = (parseInt(arr[i]) - 1).toString();
+                  var addBt = (parseInt(arr[i]) - 1).toString();
+                  var opt = "sleList" + (i+1).toString();
+                  b1.style.display = "block";
+                  b1.value=firstName;
+                  b1.innerHTML=firstName
+                  document.getElementById(remBt).disabled = false;
+                  document.getElementById(addBt).disabled = true;
+                  document.getElementById(opt).hidden=true;
+                }
+              }
+            }
+            
+            // Check the cookie on page load
+            window.onload=checkCookie();
+        </script>
+
+    </body>
+</html>
